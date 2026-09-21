@@ -1,0 +1,37 @@
+{
+  "name": "Nowshera Clinic Complete Email Automation",
+  "nodes": [
+    {
+      "parameters": {"httpMethod": "POST", "path": "clinic-email", "responseMode": "onReceived", "options": {}},
+      "id": "9f4d5afb-e684-41b3-bc05-a17dcb338af3",
+      "name": "Clinic Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [280, 300],
+      "webhookId": "nowshera-clinic-email"
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = $json.event || 'appointment_update';\nconst recipient = $json.patient_email || $json.doctor_email;\nconst patient = $json.patient_name || 'Doctor';\nconst doctor = $json.doctor_name || 'Nowshera Family Clinic';\nconst date = $json.appointment_date || '';\nconst time = $json.appointment_time || '';\nconst messages = { appointment_confirmed: 'Your appointment has been confirmed.', appointment_rejected: 'Your appointment request was rejected. Please choose another available time.', appointment_cancelled: 'Your appointment has been cancelled.', doctor_leave: 'Your appointment has been cancelled because the doctor is on leave.', appointment_reminder: 'Reminder: your appointment is tomorrow.', pending_expired: 'Your pending appointment expired and was cancelled.', doctor_invitation: 'You have been invited to join Nowshera Family Clinic.' };\nconst message = messages[event] || 'Your appointment has been updated.';\nconst setup = $json.setup_link ? `\\n\\nSet your password here: ${$json.setup_link}` : '';\nreturn [{ json: { recipient, email_subject: `Nowshera Family Clinic: ${event.replaceAll('_', ' ')}`, email_body: `Hello ${patient},\\n\\n${message}\\n\\nDoctor: ${doctor}\\nDate: ${date}\\nTime: ${time}${setup}\\n\\nThank you,\\nNowshera Family Clinic` } }];"
+      },
+      "id": "7a2f4e21-53e5-4f1d-89e1-6c3fb4cfb1ed",
+      "name": "Prepare Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {"resource": "message", "operation": "send", "sendTo": "={{ $json.recipient }}", "subject": "={{ $json.email_subject }}", "messageType": "text", "message": "={{ $json.email_body }}", "options": {}},
+      "id": "5e5b00c5-0eaa-469a-ad1d-d124351c3c9a",
+      "name": "Send Clinic Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [780, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {"Clinic Webhook": {"main": [[{"node": "Prepare Email", "type": "main", "index": 0}]]}, "Prepare Email": {"main": [[{"node": "Send Clinic Email", "type": "main", "index": 0}]]}},
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "tags": []
+}

@@ -44,6 +44,8 @@ Set a long `N8N_AUTOMATION_SECRET`, then make authenticated POST calls with head
 
 Clinic time uses `CLINIC_TIMEZONE` (default `Asia/Karachi`) consistently for slots, reminders, and the two-hour rule.
 
+Import `n8n-clinic-email-workflow.json` into n8n, connect the Gmail node to your own account, publish the workflow, and add its Production Webhook URL to both webhook variables in `.env`.
+
 ## Tests
 
 Run `python -m unittest discover -s tests -v`. The automated suite has 10 passing scenarios: signup/roles, booking/confirmation, duplicate booking, past/outside/inactive validation, slots/overlap validation, leave cancellation, cancellation/rescheduling, note privacy, completion timing, and reminder/pending-expiry automation.
