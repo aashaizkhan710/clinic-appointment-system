@@ -317,6 +317,8 @@ def seed():
  db.session.add_all([admin,doc,patient,profile]);db.session.flush()
  for wd in range(5): db.session.add(Availability(doctor_id=profile.id,weekday=wd,start_time=time(9),end_time=time(13)))
  db.session.commit()
-if __name__=='__main__':
+def init_database():
  with app.app_context(): db.create_all();seed()
+init_database()
+if __name__=='__main__':
  app.run(debug=False)

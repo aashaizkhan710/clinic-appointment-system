@@ -14,6 +14,10 @@ A Flask, SQLite, Bootstrap clinic appointment system with patient, doctor, and a
 
 SQLite data is stored in `database/clinic.db` and survives restarts. The first start creates schema and development demo data.
 
+## Publish online with Render
+
+For a public URL that works on any computer, create a Render Web Service from this GitHub repository. Use build command `pip install -r requirements.txt` and start command `gunicorn app:app`. Render's Flask guide uses these commands. Add `SECRET_KEY`, `CLINIC_TIMEZONE=Asia/Karachi`, your n8n webhook variables, and `N8N_AUTOMATION_SECRET` as Render environment variables. For permanent hosted data, create Render Postgres in the same region and set the web service `DATABASE_URL` to its internal connection URL. Never put these values in GitHub. See [Render's Flask deployment guide](https://render.com/docs/deploy-flask) and [Render Postgres setup](https://render.com/docs/postgresql-creating-connecting).
+
 ## Demo accounts
 
 | Role | Email | Password |

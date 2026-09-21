@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: nowshera-family-clinic
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CLINIC_TIMEZONE
+        value: Asia/Karachi
