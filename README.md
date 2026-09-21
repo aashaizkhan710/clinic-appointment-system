@@ -29,7 +29,7 @@ These are development-only credentials: change or remove them before any deploym
 - Password-hashed accounts, Flask sessions, CSRF-protected browser forms, and server-enforced roles.
 - 30-minute availability slots; SQLite uniqueness constraints prevent doctor or patient double booking.
 - Pending slots are held; cancellation and rescheduling enforce the two-hour rule.
-- Doctors manage schedules, leave, confirmation/rejection, completion/no-show and their own patients only.
+- Doctors manage schedules, editable availability, leave, confirmation/rejection, completion/no-show and their own patients only.
 - Admins manage doctors/patients/appointments. Visit notes are intentionally never rendered in admin pages.
 - Leave automatically cancels active appointments. Inactive doctors retain existing appointments but accept no new ones.
 
@@ -46,7 +46,7 @@ Clinic time uses `CLINIC_TIMEZONE` (default `Asia/Karachi`) consistently for slo
 
 ## Tests
 
-Run `python -m unittest discover -s tests -v`. Tests cover signup/role protection and a booking conflict. The application’s server validation also checks outside-hours, leave, past, inactive, and duplicate patient appointments.
+Run `python -m unittest discover -s tests -v`. The automated suite has 10 passing scenarios: signup/roles, booking/confirmation, duplicate booking, past/outside/inactive validation, slots/overlap validation, leave cancellation, cancellation/rescheduling, note privacy, completion timing, and reminder/pending-expiry automation.
 
 ## Structure
 

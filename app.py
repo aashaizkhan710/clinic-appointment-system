@@ -8,8 +8,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import Index, UniqueConstraint, and_, or_, text
 from werkzeug.security import check_password_hash, generate_password_hash
+from dotenv import load_dotenv
 from config import Config
 
+load_dotenv()
 db=SQLAlchemy(); login_manager=LoginManager(); csrf=CSRFProtect()
 ACTIVE={'Pending','Confirmed'}; TRANSITIONS={'Pending':{'Confirmed','Rejected','Cancelled'},'Confirmed':{'Cancelled','Completed','No-show'}}
 def now(): return datetime.now(ZoneInfo(app.config['CLINIC_TIMEZONE']))
@@ -112,6 +114,14 @@ def patient_appointments():
  q=Appointment.query.filter_by(patient_id=current_user.id); status=request.args.get('status');
  if status: q=q.filter_by(status=status)
  return render_template('patient/appointments.html',appointments=q.order_by(Appointment.appointment_date.desc(),Appointment.start_time.desc()).all())
+@app.route('/patient/appointment/<int:aid>/reschedule',methods=['GET'])
+@role_required('patient')
+def reschedule_page(aid):
+ a=Appointment.query.filter_by(id=aid,patient_id=current_user.id).first_or_404()
+ if a.status not in ACTIVE or start_dt(a)-now()<timedelta(hours=2): abort(403)
+ try: chosen=date.fromisoformat(request.args.get('day',a.appointment_date.isoformat()))
+ except ValueError: chosen=a.appointment_date
+ return render_template('patient/reschedule.html',appointment=a,day=chosen,slots=slots(a.doctor,chosen))
 @app.route('/patient/book/<int:doctor_id>',methods=['GET','POST'])
 @role_required('patient')
 def book(doctor_id):
@@ -182,6 +192,18 @@ def availability():
    db.session.add(Availability(doctor_id=d.id,weekday=wd,start_time=st,end_time=en));db.session.commit();flash('Availability added.','success')
   except (KeyError,ValueError) as e: flash(str(e),'danger')
  return render_template('doctor/availability.html',availability=d.availability)
+@app.route('/doctor/availability/<int:avid>/edit',methods=['POST'])
+@role_required('doctor')
+def edit_availability(avid):
+ a=Availability.query.filter_by(id=avid,doctor_id=current_user.doctor_profile.id).first_or_404()
+ try:
+  wd=int(request.form['weekday']); st=time.fromisoformat(request.form['start']); en=time.fromisoformat(request.form['end'])
+  if not 0<=wd<=6 or en<=st: raise ValueError('End time must be later than start time.')
+  overlap=Availability.query.filter_by(doctor_id=a.doctor_id,weekday=wd).filter(Availability.id!=a.id,Availability.start_time<en,Availability.end_time>st).first()
+  if overlap: raise ValueError('Working hours overlap an existing period.')
+  a.weekday,a.start_time,a.end_time=wd,st,en;db.session.commit();flash('Availability updated.','success')
+ except (KeyError,ValueError) as e: flash(str(e),'danger')
+ return redirect(url_for('availability'))
 @app.route('/doctor/availability/<int:avid>/delete',methods=['POST'])
 @role_required('doctor')
 def delete_availability(avid):
@@ -211,7 +233,7 @@ def patient_history(pid):
 @app.route('/admin')
 @role_required('admin')
 def admin_dashboard():
- ap=Appointment.query; return render_template('admin/dashboard.html',active_doctors=DoctorProfile.query.filter_by(active=True).count(),patients=User.query.filter_by(role='patient').count(),today_count=ap.filter_by(appointment_date=date.today()).count(),upcoming=ap.filter(Appointment.appointment_date>=date.today(),Appointment.status.in_(ACTIVE)).count(),doctors=DoctorProfile.query.all())
+ ap=Appointment.query; doctors=DoctorProfile.query.all(); stats={d.id:{s:Appointment.query.filter_by(doctor_id=d.id,status=s).count() for s in ['Pending','Confirmed','Completed','No-show','Cancelled','Rejected']} for d in doctors}; return render_template('admin/dashboard.html',active_doctors=DoctorProfile.query.filter_by(active=True).count(),patients=User.query.filter_by(role='patient').count(),today_count=ap.filter_by(appointment_date=date.today()).count(),upcoming=ap.filter(Appointment.appointment_date>=date.today(),Appointment.status.in_(ACTIVE)).count(),doctors=doctors,stats=stats)
 @app.route('/admin/doctors',methods=['GET','POST'])
 @role_required('admin')
 def admin_doctors():
@@ -225,6 +247,13 @@ def admin_doctors():
 @role_required('admin')
 def doctor_toggle(did):
  d=db.session.get(DoctorProfile,did) or abort(404);d.active=not d.active;db.session.commit();flash('Doctor status updated. Existing appointments are retained; inactive doctors cannot receive new bookings.','success');return redirect(url_for('admin_doctors'))
+@app.route('/admin/doctors/<int:did>/edit',methods=['POST'])
+@role_required('admin')
+def doctor_edit(did):
+ d=db.session.get(DoctorProfile,did) or abort(404); name=request.form.get('name','').strip(); specialty=request.form.get('specialty','').strip()
+ if not name or not specialty: flash('Name and specialty are required.','danger')
+ else: d.user.name=name;d.specialty=specialty;db.session.commit();flash('Doctor details updated.','success')
+ return redirect(url_for('admin_doctors'))
 @app.route('/setup-password/<token>',methods=['GET','POST'])
 def setup_password(token):
  rec=next((x for x in SetupToken.query.filter_by(used=False).all() if x.expires_at>datetime.utcnow() and check_password_hash(x.token_hash,token)),None)
