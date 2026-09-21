@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block content %}<div class="container py-4"><h1>Leave dates</h1><form method="post"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><input type="date" name="leave_date" min="{{today}}"><button>Add leave</button></form>{% for l in leaves %}<p>{{l.leave_date}}</p>{% endfor %}</div>{% endblock %}

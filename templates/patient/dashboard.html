@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block content %}<div class="container py-4"><h1>Hello, {{current_user.name}}</h1><a class="btn btn-success" href="{{url_for('doctors')}}">Book appointment</a><div class="card mt-3 p-3">{% include '_appointments.html' %}</div></div>{% endblock %}

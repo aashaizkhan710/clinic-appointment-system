@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block content %}<div class="container py-4"><h1>{{patient.name}} history</h1>{% for a in appointments %}<div class="card p-3 my-2">{{a.appointment_date}} — {{a.status}}{% if a.visit_note %}<p>{{a.visit_note}}</p>{% endif %}</div>{% endfor %}</div>{% endblock %}

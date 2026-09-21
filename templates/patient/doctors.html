@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block content %}<div class="container py-4"><h1>Find a doctor</h1>{% for d in doctors %}<div class="card p-3 my-3"><h4>{{d.user.name}}</h4><p>{{d.specialty}}</p><a class="btn btn-success" href="{{url_for('book',doctor_id=d.id)}}">Book appointment</a></div>{% else %}<p>No doctors available.</p>{% endfor %}</div>{% endblock %}

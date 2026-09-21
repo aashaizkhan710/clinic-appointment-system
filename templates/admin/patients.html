@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block content %}<div class="container py-4"><h1>Patients</h1><form><input name="q" value="{{q}}" placeholder="Search"><button>Search</button></form>{% for p in patients %}<p>{{p.name}} · {{p.email}} · {{p.phone}}</p>{% endfor %}</div>{% endblock %}
